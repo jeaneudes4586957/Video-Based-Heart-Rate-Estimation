@@ -1,0 +1,6 @@
+# Versions were not recorded in the original 2024 work; see README for the versions used for re-execution.
+numpy
+scipy
+matplotlib
+opencv-python
+jupyterlab

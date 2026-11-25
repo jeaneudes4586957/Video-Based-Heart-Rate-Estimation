@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Videos are not distributed (they show people)
+*.mp4
+*.avi
+*.mov
+
+# Frame written by the ROI-selection cell (shows a person)
+notebooks/full_frame.png
+full_frame.png

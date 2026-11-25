@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Video-Based Heart Rate Estimation"
+abstract: "Exploratory estimation of heart rate from the colour variations of a skin region in video, using band-pass filtering and peak counting."
+authors:
+  - family-names: Beucher
+    given-names: Jean-Eudes
+repository-code: "https://github.com/jeaneudes4586957/Video-Based-Heart-Rate-Estimation"
+license: MIT

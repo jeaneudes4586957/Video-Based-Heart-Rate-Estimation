@@ -1,70 +1,96 @@
 # Video-Based Heart Rate Estimation
 
-## Introduction
+Exploratory remote photoplethysmography (rPPG): heart rate from the periodic colour variation of a small skin region in a video, with a negative-control analysis on a background region.
 
-The analysis of videos to extract physiological information, such as heart rate, has gained popularity in recent years. This project aims to develop a method for analyzing videos using image and signal processing techniques to detect light intensity variations associated with heartbeats.
+<p align="center">
+  <img src="assets/roi_vs_neutral.png" alt="Filtered green channel and spectra of a skin region and of a neutral background region" width="720">
+</p>
 
-The main approach involves extracting color components from a Region of Interest (ROI) in each video frame and analyzing their variations over time. By applying filtering techniques and peak detection, we can estimate the heart rate of the person in the video. Additionally, frequency analysis provides insights into the signal's characteristics in terms of frequency components.
+> **Status.** Exploratory analysis written in 2024, not actively maintained. No reference heart rate (pulse oximeter, ECG) was recorded, so the accuracy of the estimates has **not** been assessed. The negative control below shows that the method, as implemented, does **not** demonstrate that its estimates come from a cardiac signal.
 
-The project is structured into multiple steps, from selecting the ROI in the video to analyzing filtered signals and detecting peaks. Each section is designed to address a specific aspect of data processing and analysis using Python libraries like OpenCV, NumPy, SciPy, and Matplotlib.
+| | |
+|---|---|
+| **Input** | Three short videos, 30 frames per second (not distributed, see [`data/README.md`](data/README.md)). |
+| **Output** | Heart-rate estimate (bpm) per recording, from RGB and from YCrCb channels. |
+| **Key finding** | On recording 1, a neutral background region gives the same estimate as the skin region (128 vs 131 bpm; 64 vs 64 peaks in the green channel). |
+| **Code** | Python notebook, OpenCV / NumPy / SciPy / Matplotlib. |
 
-The final objective is to deliver a robust method for estimating heart rate from videos, addressing challenges such as lighting variations, motion, and other artifacts that can affect the quality of extracted signals. This method can be applied to various videos, including those captured in clinical or home environments, for non-invasive health monitoring.
+## Overview
 
-## Table of Contents
+The heartbeat slightly modulates the light reflected by skin. The notebook averages each colour channel over a 5 x 5 pixel region of interest (ROI) in every frame, band-pass filters the resulting time series, counts the peaks and converts the count to beats per minute. A neutral region of the same size, taken in the background of recording 1, serves as a negative control.
 
-### I. Load and Select a Region in the Video
-   - Video retrieval
-   - ROI selection
-   - Neutral region selection
-   - Defining the zone size
+## Method
 
-### II. RGB Component Intensity Analysis in a Region
-   - Extracting video frames
-   - Calculating average RGB component intensities
-   - Storing data and plotting graphs
+All steps are in [`notebooks/video_heart_rate.ipynb`](notebooks/video_heart_rate.ipynb).
 
-### III. Filtered RGB Intensity Analysis and Peak Detection
-   - Data filtering
-   - Peak detection
-   - Plotting filtered curves
-   - Peak count and average heart rate (BPM)
+1. Select the ROI (and, for recording 1, a neutral region) with a mouse click; the click gives the top-left corner of a fixed 5 x 5 pixel region.
+2. Mean R, G, B value of the ROI in each frame.
+3. 4th-order Butterworth band-pass filter (zero phase): 1.67-2.67 Hz (100-160 bpm) for recording 1, 0.7-3 Hz (42-180 bpm) for recordings 2 and 3, assuming 30 frames per second.
+4. Peak detection (`find_peaks(height=0)`) on each filtered channel. Heart rate = mean peak count of the three channels x 60 / clip duration, where the duration is typed into the notebook. The code prints `int(value) + 1`.
+5. FFT of the filtered signals.
+6. The same analysis in the YCrCb colour space.
+7. Negative control on the neutral region, then recordings 2 and 3.
 
-### IV. Frequency Analysis of Filtered Signals
-   - Fourier Transform computation
-   - Frequency mapping
-   - Plotting the frequency spectrum
+## Results
 
-### V. YCrCb Component Intensity Analysis
-   - Color space conversion
-   - Extraction and average calculations
-   - Data storage and graph plotting
+<p align="center">
+  <img src="assets/results.png" alt="Estimated heart rate per recording, RGB and YCrCb, re-run and 2024 values" width="720">
+</p>
 
-### VI. Filtering YCrCb Signals and Peak Detection
-   - Data filtering
-   - Peak detection
-   - Plotting filtered curves
-   - Peak count and average heart rate (BPM)
+| Recording | Clip | Pass band | RGB (bpm) | YCrCb (bpm) | 2024 notebook output (RGB / YCrCb) |
+|---|---|---|---|---|---|
+| 1, skin ROI | 30 s | 1.67-2.67 Hz | 131 | 131 | 129 / 132 |
+| 1, neutral region | 30 s | 1.67-2.67 Hz | 128 | not run | 128 / not run |
+| 2 | 10 s | 0.7-3 Hz | 111 | 111 | 111 / 113 |
+| 3 | 30 s | 0.7-3 Hz | 112 | 109 | 84 / 96 |
 
-### VII. Frequency Analysis of Filtered YCrCb Signals
-   - Fourier Transform computation
-   - Frequency mapping
-   - Plotting the frequency spectrum
+The "RGB" and "YCrCb" columns are the outputs saved in the notebook (re-run in 2026). The last column gives the values recorded by the original 2024 run.
 
-### VIII. Neutral Zone Testing
+**Reproducibility.** Re-running the notebook with the same code and the same click coordinates, but a newer OpenCV (5.0.0), changes the peak counts by 1 to 3 on recordings 1 and 2, and changes the estimate for recording 3 from 84 / 96 to 112 / 109 bpm. The cause was not investigated; a difference in video decoding is a plausible candidate but is not verified. Either way, the estimates are sensitive to details that do not change the underlying signal.
 
-### IX. Test on the Video with the American Subject
+## Limitations
 
-### X. Test on the Video with the Girl in Green
+- **The negative control does not discriminate.** The neutral region gives 128 bpm against 131 bpm for the skin ROI, and 64 peaks in both. The arithmetic centre of the 1.67-2.67 Hz pass band corresponds to 130 bpm, which is where all three recording-1 estimates fall. In the unfiltered green channel, neither region shows a distinct spectral peak inside the pass band (panel b above).
+- No reference heart rate; no error metric.
+- Peaks are counted without minimum distance or prominence constraints, so noise peaks inside the pass band are counted.
+- Clip durations and the frame rate are hard-coded (recording 3 is 29.97 fps, not 30). ROI selection is manual and interactive (it opens an OpenCV window, so a display is required).
+- The recordings come from three different scenes; no inference about accuracy across subjects or conditions can be drawn from three clips.
 
-## Libraries Used
+## Audit notes (2026)
 
-The project leverages the following Python libraries:
+Corrections made to the notebook while translating it, none of which changes a peak count:
 
-- **OpenCV**: For image and video manipulation.
-- **Matplotlib**: For data visualization and plotting.
-- **NumPy**: For numerical computations and multidimensional array manipulation.
-- **SciPy**: For designing and applying numerical filters, as well as peak detection.
+- In the YCrCb sections of recordings 2 and 3, the "Cr (filtered)" and "Cb (filtered)" plots drew the RGB green and blue curves instead of the Cr and Cb curves.
+- The legends of the RGB spectra were labelled Y, Cr and Cb.
+- Comments and titles stated a 0.67-2.67 Hz pass band and 3 x 3 or 10 x 10 pixel regions; the code uses the bands above and 5 x 5 pixels.
 
----
+The preview frames shown during ROI selection were removed from the saved outputs because they show people.
 
-This project showcases a robust approach for heart rate estimation from videos using advanced processing and analysis techniques. It provides a framework that can be expanded for various real-world applications.
+## Repository structure
+
+```
+notebooks/video_heart_rate.ipynb   analysis notebook
+data/videos/                       place your own videos here (not distributed)
+data/README.md                     data description
+assets/                            figures above
+requirements.txt
+CITATION.cff
+LICENSE
+```
+
+## Reproducing
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+# put recording_1.mp4, recording_2.mp4, recording_3.mp4 in data/videos/
+cd notebooks && jupyter lab        # open video_heart_rate.ipynb and run all cells
+```
+
+The saved outputs come from a run with Python 3.13, OpenCV 5.0.0, NumPy 2.5.3, SciPy 1.18.1 and Matplotlib 3.11.2. In that run the mouse clicks were replayed from the coordinates listed in the notebook introduction. Running interactively needs a display.
+
+## Citation and licence
+
+See [`CITATION.cff`](CITATION.cff). Code released under the [MIT licence](LICENSE).
+
+Author: Jean-Eudes Beucher
