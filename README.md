@@ -8,6 +8,8 @@ Exploratory remote photoplethysmography (rPPG): heart rate from the periodic col
 
 > **Status.** Exploratory analysis written in 2024, not actively maintained. No reference heart rate (pulse oximeter, ECG) was recorded, so the accuracy of the estimates has **not** been assessed. The negative control below shows that the method, as implemented, does **not** demonstrate that its estimates come from a cardiac signal.
 
+> **Context.** Developed in 2024 during my engineering studies at [ESEO](https://www.eseo.fr), within study and research projects carried out in collaboration with ESEO. Exploratory scope: this is not a clinical study and makes no claim of clinical validity.
+
 | | |
 |---|---|
 | **Input** | Three short videos, 30 frames per second (not distributed, see [`data/README.md`](data/README.md)). |
